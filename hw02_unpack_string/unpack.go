@@ -10,6 +10,7 @@ import (
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(input string) (string, error) {
+	var b strings.Builder
 	if input == "" {
 		return "", nil
 	}
@@ -17,56 +18,32 @@ func Unpack(input string) (string, error) {
 	if unicode.IsDigit(r[0]) {
 		return "", ErrInvalidString
 	}
-	var b strings.Builder
-	var symbol rune
-	var symbolNext rune
-	strLen := len(r)
-	for i := 0; i < strLen; i++ {
-		symbol = r[i]
-		if strLen <= i+1 {
-			if !unicode.IsDigit(symbol) && symbol != 92 {
-				b.WriteRune(symbol)
-				break
-			} else {
-				break
-			}
-		} else {
-			symbolNext = r[i+1]
-		}
-		if unicode.IsDigit(symbol) && unicode.IsDigit(symbolNext) {
-			return "", ErrInvalidString
-		}
+	var prev rune
+	for _, symbol := range r {
 		switch {
-		case symbol == 92:
+		case unicode.IsDigit(symbol) && unicode.IsDigit(prev):
 			{
-				if !unicode.IsDigit(symbolNext) && symbolNext != 92 {
-					return "", ErrInvalidString
-				}
-				if strLen > i+2 {
-					if unicode.IsDigit(r[i+2]) {
-						num, _ := strconv.Atoi(string(r[i+2]))
-						b.WriteString(strings.Repeat(string(symbolNext), num))
-						i++
-						continue
-					} else {
-						b.WriteRune(symbolNext)
-						i++
-						continue
+				return "", ErrInvalidString
+			}
+		case unicode.IsDigit(symbol) && !unicode.IsDigit(prev):
+			{
+				if num, err := strconv.Atoi(string(symbol)); err == nil {
+					_, err = b.WriteString(strings.Repeat(string(prev), num))
+					if err != nil {
+						return "", err
 					}
-				} else {
-					b.WriteRune(symbolNext)
-					break
 				}
 			}
-		case unicode.IsDigit(symbolNext):
-			{
-				num, _ := strconv.Atoi(string(symbolNext))
-				b.WriteString(strings.Repeat(string(symbol), num))
-				continue
+		default:
+			if unicode.IsLetter(prev) {
+				b.WriteRune(prev)
 			}
 		}
-		if !unicode.IsDigit(symbol) && symbol != 92 {
-			b.WriteRune(symbol)
+		prev = symbol
+	}
+	if unicode.IsLetter(prev) {
+		if _, err := b.WriteRune(prev); err != nil {
+			return "", err
 		}
 	}
 	return b.String(), nil
