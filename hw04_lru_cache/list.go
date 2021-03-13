@@ -1,26 +1,17 @@
-package hw04lrucache
+package hw04_lru_cache //nolint:golint,stylecheck
 
 type List interface {
-	Len() int
-	Front() *ListItem
-	Back() *ListItem
-	PushFront(v interface{}) *ListItem
-	PushBack(v interface{}) *ListItem
-	Remove(i *ListItem)
-	MoveToFront(i *ListItem)
+	// Place your code here
 }
 
-type ListItem struct {
-	Value interface{}
-	Next  *ListItem
-	Prev  *ListItem
+type listItem struct {
+	// Place your code here
 }
 
 type list struct {
-	List // Remove me after realization.
-	// Place your code here.
+	// Place your code here
 }
 
 func NewList() List {
-	return new(list)
+	return &list{}
 }

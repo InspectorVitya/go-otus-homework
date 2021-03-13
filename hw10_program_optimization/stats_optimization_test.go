@@ -1,6 +1,6 @@
 // +build bench
 
-package hw10programoptimization
+package hw10_program_optimization //nolint:golint,stylecheck
 
 import (
 	"archive/zip"

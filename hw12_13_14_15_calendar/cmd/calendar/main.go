@@ -5,7 +5,6 @@ import (
 	"flag"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
@@ -40,14 +39,9 @@ func main() {
 
 	go func() {
 		signals := make(chan os.Signal, 1)
-		signal.Notify(signals, syscall.SIGINT, syscall.SIGHUP)
+		signal.Notify(signals)
 
-		select {
-		case <-ctx.Done():
-			return
-		case <-signals:
-		}
-
+		<-signals
 		signal.Stop(signals)
 		cancel()
 
@@ -63,7 +57,6 @@ func main() {
 
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+		os.Exit(1)
 	}
 }

@@ -1,30 +1,22 @@
-package hw04lrucache
+package hw04_lru_cache //nolint:golint,stylecheck
 
 type Key string
 
 type Cache interface {
-	Set(key Key, value interface{}) bool
-	Get(key Key) (interface{}, bool)
-	Clear()
+	// Place your code here
 }
 
 type lruCache struct {
-	Cache // Remove me after realization.
-
-	capacity int
-	queue    List
-	items    map[Key]*ListItem
+	// Place your code here:
+	// - capacity
+	// - queue
+	// - items
 }
 
 type cacheItem struct {
-	key   string
-	value interface{}
+	// Place your code here
 }
 
 func NewCache(capacity int) Cache {
-	return &lruCache{
-		capacity: capacity,
-		queue:    NewList(),
-		items:    make(map[Key]*ListItem, capacity),
-	}
+	return &lruCache{}
 }
