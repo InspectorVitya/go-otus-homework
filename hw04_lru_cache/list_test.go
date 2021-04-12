@@ -48,4 +48,22 @@ func TestList(t *testing.T) {
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
+
+	t.Run("queue order", func(t *testing.T) {
+		l := NewList()
+
+		item1 := l.PushFront(10)
+		require.Equal(t, 1, l.Len())
+		require.Equal(t, l.Front(), l.Back())
+
+		item2 := l.PushFront(20)
+		require.Equal(t, 2, l.Len())
+		require.Equal(t, item2, l.Front())
+		require.Equal(t, item1, l.Back())
+
+		l.MoveToFront(item1)
+		require.Equal(t, 2, l.Len())
+		require.Equal(t, item1, l.Front())
+		require.Equal(t, item2, l.Back())
+	})
 }
