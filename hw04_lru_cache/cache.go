@@ -1,24 +1,23 @@
-package hw04lrucache
-
-import "sync"
+package hw04_lru_cache
 
 type Key string
 
 type Cache interface {
-	Set(key Key, value interface{}) bool // Добавить значение в кэш по ключу
-	Get(key Key) (interface{}, bool)     // Получить значение из кэша по ключу
-	Clear()                              // Очистить кэш
+	Set(key Key, value interface{}) bool
+	Get(key Key) (interface{}, bool)
+	Clear()
 }
 
 type lruCache struct {
-	mutex    sync.Mutex
-	items    map[Key]*ListItem
-	queue    List
+	Cache // Remove me after realization.
+
 	capacity int
+	queue    List
+	items    map[Key]*ListItem
 }
 
 type cacheItem struct {
-	key   Key
+	key   string
 	value interface{}
 }
 
@@ -26,46 +25,6 @@ func NewCache(capacity int) Cache {
 	return &lruCache{
 		capacity: capacity,
 		queue:    NewList(),
-		items:    make(map[Key]*ListItem),
-	}
-}
-
-func (lc *lruCache) Set(key Key, value interface{}) bool {
-	cacheValue := cacheItem{key: key, value: value}
-	lc.mutex.Lock()
-	defer lc.mutex.Unlock()
-	if item, ok := lc.items[key]; ok {
-		item.Value = cacheValue
-		lc.queue.MoveToFront(item)
-		return true
-	}
-	if lc.queue.Len() >= lc.capacity {
-		back := lc.queue.Back()
-		value := back.Value.(cacheItem)
-		delete(lc.items, value.key)
-		lc.queue.Remove(back)
-	}
-	item := lc.queue.PushFront(cacheValue)
-	lc.items[key] = item
-	return false
-}
-
-func (lc *lruCache) Get(key Key) (interface{}, bool) {
-	lc.mutex.Lock()
-	defer lc.mutex.Unlock()
-	if item, ok := lc.items[key]; ok {
-		lc.queue.MoveToFront(item)
-		cacheValue := item.Value.(cacheItem)
-		return cacheValue.value, true
-	}
-	return nil, false
-}
-
-func (lc *lruCache) Clear() {
-	lc.mutex.Lock()
-	defer lc.mutex.Unlock()
-	for key, item := range lc.items {
-		lc.queue.Remove(item)
-		delete(lc.items, key)
+		items:    make(map[Key]*ListItem, capacity),
 	}
 }

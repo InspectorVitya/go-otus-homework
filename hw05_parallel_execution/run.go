@@ -6,8 +6,10 @@ import (
 	"sync/atomic"
 )
 
-var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
-var ErrInvalidNumberWorkers = errors.New("invalid number workers")
+var (
+	ErrErrorsLimitExceeded  = errors.New("errors limit exceeded")
+	ErrInvalidNumberWorkers = errors.New("invalid number workers")
+)
 
 type Task func() error
 
@@ -17,9 +19,8 @@ func Run(tasks []Task, n, m int) error {
 		return err
 	}
 
-	var ch = make(chan Task, len(tasks))
+	ch := make(chan Task, len(tasks))
 	wg := sync.WaitGroup{}
-	maxErrs := int32(m)
 	var errCount int32
 	for i := 0; i < n; i++ {
 		wg.Add(1)
@@ -31,9 +32,9 @@ func Run(tasks []Task, n, m int) error {
 					break
 				}
 				if err := val(); err != nil {
-					stop = atomic.AddInt32(&errCount, 1) >= maxErrs
+					stop = atomic.AddInt32(&errCount, 1) >= int32(m)
 				} else {
-					stop = atomic.LoadInt32(&errCount) >= maxErrs
+					stop = atomic.LoadInt32(&errCount) >= int32(m)
 				}
 			}
 		}()
@@ -43,7 +44,7 @@ func Run(tasks []Task, n, m int) error {
 	}
 	close(ch)
 	wg.Wait()
-	if errCount >= maxErrs {
+	if errCount >= int32(m) {
 		return ErrErrorsLimitExceeded
 	}
 

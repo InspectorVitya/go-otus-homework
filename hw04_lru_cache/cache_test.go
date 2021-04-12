@@ -1,4 +1,4 @@
-package hw04lrucache
+package hw04_lru_cache
 
 import (
 	"math/rand"
@@ -49,52 +49,14 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic by capacity", func(t *testing.T) {
-		keys := []Key{"aaa", "bbb", "ccc", "ddd"}
-		c := NewCache(len(keys) - 1)
-
-		for _, key := range keys {
-			wasInCache := c.Set(key, 0)
-			require.False(t, wasInCache)
-		}
-
-		val, ok := c.Get(keys[0])
-		require.False(t, ok)
-		require.Equal(t, nil, val)
-
-		for _, cache := range keys[1:] {
-			val, ok = c.Get(cache)
-			require.True(t, ok)
-			require.NotEqual(t, nil, val)
-		}
-	})
-
-	t.Run("purge logic rarely used", func(t *testing.T) {
-		keys := []Key{"aaa", "bbb", "ccc"}
-		c := NewCache(3)
-
-		for _, key := range keys {
-			wasInCache := c.Set(key, 0)
-			require.False(t, wasInCache)
-		}
-
-		_, ok := c.Get(keys[0])
-		require.True(t, ok)
-		_, ok = c.Get(keys[0])
-		require.True(t, ok)
-		ok = c.Set(keys[1], 0)
-		require.True(t, ok)
-
-		wasInCache := c.Set("ddd", 0)
-		require.False(t, wasInCache)
-
-		val, ok := c.Get(keys[2])
-		require.False(t, ok)
-		require.Equal(t, nil, val)
+	t.Run("purge logic", func(t *testing.T) {
+		// Write me
 	})
 }
 
 func TestCacheMultithreading(t *testing.T) {
+	t.Skip() // Remove me if task with asterisk completed.
+
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
