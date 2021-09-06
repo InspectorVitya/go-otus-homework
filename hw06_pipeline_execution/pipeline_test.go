@@ -1,4 +1,4 @@
-package hw06pipelineexecution
+package hw06
 
 import (
 	"strconv"
@@ -89,5 +89,13 @@ func TestPipeline(t *testing.T) {
 
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("in is nil, done is nil", func(t *testing.T) {
+		res := ExecutePipeline(nil, nil, stages...)
+		elem, ok := <-res
+
+		require.False(t, ok)
+		require.Nil(t, elem)
 	})
 }
