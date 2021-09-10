@@ -10,20 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	outPath string
-	tmpDir  string
-)
 
-func setup(t *testing.T, offset, limit int64) {
+
+func setup(t *testing.T, offset, limit int64) (string, string) {
 	tmpDir, err := ioutil.TempDir("", "copy")
 	if err != nil {
 		t.Fatal("can't create temp dir: ", err)
 	}
-	outPath = filepath.Join(tmpDir, "out_offset"+strconv.Itoa(int(offset))+"_limit"+strconv.Itoa(int(limit))+".txt")
+	outPath := filepath.Join(tmpDir, "out_offset"+strconv.Itoa(int(offset))+"_limit"+strconv.Itoa(int(limit))+".txt")
+	return outPath, tmpDir
 }
 
 func TestCopy_Valid(t *testing.T) {
+
 	tests := []struct {
 		name     string
 		fromPath string
@@ -74,11 +73,19 @@ func TestCopy_Valid(t *testing.T) {
 			limit:    1000,
 			toPath:   "out_offset6000_limit1000.txt",
 		},
+		{
+			name:     "test case when limit more than file size",
+			fromPath: "testdata/input.txt",
+			offset:   0,
+			limit:    10000000000000,
+			toPath:   "out_offset0_limit0.txt",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			outPath, tmpDir  := setup(t, tt.offset, tt.limit)
 			defer os.RemoveAll(tmpDir)
-			setup(t, tt.offset, tt.limit)
 			err := Copy(tt.fromPath, outPath, tt.offset, tt.limit)
 			require.Nil(t, err)
 
@@ -91,19 +98,7 @@ func TestCopy_Valid(t *testing.T) {
 			require.Equal(t, expected, actual)
 		})
 	}
-}
 
-func Test_test(t *testing.T) {
-	t.Run("limit more than file size", func(t *testing.T) {
-		setup(t, 0, 10000000000000)
-		err := Copy("testdata/input.txt", outPath, 0, 10000000000000)
-		require.NoError(t, err)
-	})
-	t.Run("offset more than file size", func(t *testing.T) {
-		setup(t, 10000000000000, 0)
-		err := Copy("testdata/input.txt", outPath, 10000000000000, 0)
-		require.Error(t, err)
-	})
 }
 
 func TestCopy_InValid(t *testing.T) {
@@ -117,6 +112,10 @@ func TestCopy_InValid(t *testing.T) {
 	})
 	t.Run("src file not exists err", func(t *testing.T) {
 		err := Copy("non_existent_file.txt", "out.txt", 0, 0)
+		require.Error(t, err)
+	})
+	t.Run("offset more than file size", func(t *testing.T) {
+		err := Copy("testdata/input.txt", "out.txt", 10000000000000, 0)
 		require.Error(t, err)
 	})
 }
