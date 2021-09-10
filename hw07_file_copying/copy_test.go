@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-
 func setup(t *testing.T, offset, limit int64) (string, string) {
 	tmpDir, err := ioutil.TempDir("", "copy")
 	if err != nil {
@@ -22,7 +20,6 @@ func setup(t *testing.T, offset, limit int64) (string, string) {
 }
 
 func TestCopy_Valid(t *testing.T) {
-
 	tests := []struct {
 		name     string
 		fromPath string
@@ -84,7 +81,7 @@ func TestCopy_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			outPath, tmpDir  := setup(t, tt.offset, tt.limit)
+			outPath, tmpDir := setup(t, tt.offset, tt.limit)
 			defer os.RemoveAll(tmpDir)
 			err := Copy(tt.fromPath, outPath, tt.offset, tt.limit)
 			require.Nil(t, err)
@@ -98,7 +95,6 @@ func TestCopy_Valid(t *testing.T) {
 			require.Equal(t, expected, actual)
 		})
 	}
-
 }
 
 func TestCopy_InValid(t *testing.T) {

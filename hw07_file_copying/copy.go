@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/cheggaaa/pb/v3"
 	"io"
 	"os"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 var (
@@ -39,7 +40,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 
 	dst, err := os.Create(toPath)
 	if err != nil {
-		return  fmt.Errorf("create file %q: %w", toPath, err)
+		return fmt.Errorf("create file %q: %w", toPath, err)
 	}
 	defer dst.Close()
 
@@ -47,7 +48,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if err != nil {
 		return fmt.Errorf("cannot execute seek: %w", err)
 	}
-
 
 	bar := pb.Full.Start64(limit)
 	barReader := bar.NewProxyReader(src)
