@@ -1,7 +1,6 @@
 package hw05parallelexecution
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"sync/atomic"
@@ -32,9 +31,9 @@ func TestRun(t *testing.T) {
 
 		workersCount := 10
 		maxErrorsCount := 23
-		err := Run(tasks, workersCount, maxErrorsCount)
+		result := Run(tasks, workersCount, maxErrorsCount)
 
-		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
+		require.Equal(t, ErrErrorsLimitExceeded, result)
 		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
 	})
 
@@ -60,11 +59,63 @@ func TestRun(t *testing.T) {
 		maxErrorsCount := 1
 
 		start := time.Now()
-		err := Run(tasks, workersCount, maxErrorsCount)
+		result := Run(tasks, workersCount, maxErrorsCount)
 		elapsedTime := time.Since(start)
-		require.NoError(t, err)
+		require.Nil(t, result)
 
 		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
+	})
+
+	t.Run("invalid maximum number of errors", func(t *testing.T) {
+		tasksCount := 10
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+		for i := 0; i < tasksCount; i++ {
+			taskSleep := time.Millisecond * time.Duration(rand.Intn(100))
+			tasks = append(tasks, func() error {
+				time.Sleep(taskSleep)
+				atomic.AddInt32(&runTasksCount, 1)
+				return nil
+			})
+		}
+
+		workersCount := 5
+		maxErrorsCount := 0
+
+		result := Run(tasks, workersCount, maxErrorsCount)
+		require.Equal(t, ErrErrorsLimitExceeded, result)
+		require.Equal(t, runTasksCount, int32(0), "not all tasks were completed")
+	})
+
+	t.Run("invalid number of workers", func(t *testing.T) {
+		tasksCount := 10
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+		for i := 0; i < tasksCount; i++ {
+			taskSleep := time.Millisecond * time.Duration(rand.Intn(100))
+			tasks = append(tasks, func() error {
+				time.Sleep(taskSleep)
+				atomic.AddInt32(&runTasksCount, 1)
+				return nil
+			})
+		}
+
+		workersCount := 0
+		maxErrorsCount := 1
+
+		result := Run(tasks, workersCount, maxErrorsCount)
+		require.Equal(t, ErrInvalidNumberWorkers, result)
+		require.Equal(t, runTasksCount, int32(0), "not all tasks were completed")
+	})
+
+	t.Run("empty task slice", func(t *testing.T) {
+		workersCount := 10
+		maxErrorsCount := 1
+
+		result := Run([]Task{}, workersCount, maxErrorsCount)
+		require.Nil(t, result)
 	})
 }
