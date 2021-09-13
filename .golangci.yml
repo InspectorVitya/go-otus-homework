@@ -17,7 +17,6 @@ issues:
         - dupl
         - gocyclo
         - gosec
-        - scopelint
 
 linters:
   disable-all: true
