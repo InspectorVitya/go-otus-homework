@@ -36,8 +36,6 @@ func ReadDir(dir string) (Environment, error) {
 		}
 
 		openFile, err := os.Open(filepath.Join(dir, file.Name()))
-		defer openFile.Close() // nolint
-
 		if err != nil {
 			return nil, err
 		}
@@ -51,6 +49,7 @@ func ReadDir(dir string) (Environment, error) {
 			}
 			return nil, err
 		}
+		openFile.Close()
 		str := bytes.TrimRight(l, " \t")
 		str = bytes.ReplaceAll(str, []byte("\x00"), []byte("\n"))
 		if len(str) == 0 {
