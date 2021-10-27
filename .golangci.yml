@@ -42,7 +42,6 @@ linters:
     - gofumpt
     - goheader
     - goimports
-    - golint
     - gomodguard
     - goprintffuncname
     - gosec
@@ -50,8 +49,6 @@ linters:
     - govet
     - ifshort
     - ineffassign
-    - interfacer
-    - maligned
     - misspell
     - nestif
     - noctx
@@ -59,7 +56,6 @@ linters:
     - prealloc
     - predeclared
     - rowserrcheck
-    - scopelint
     - sqlclosecheck
     - staticcheck
     - structcheck
