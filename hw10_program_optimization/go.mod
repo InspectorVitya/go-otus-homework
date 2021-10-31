@@ -1,4 +1,4 @@
-module github.com/InspectorVitya/hw10_program_optimization
+module github.com/InspectorVitya/go-otus-homework/hw10_program_optimization
 
 go 1.16
 
