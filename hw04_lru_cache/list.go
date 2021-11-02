@@ -1,33 +1,30 @@
-package hw04lrucache
+package hw04_lru_cache
 
 type List interface {
-	Len() int                          // длина списка
-	Front() *listItem                  // первый элемент списка
-	Back() *listItem                   // последний элемент списка
-	PushFront(v interface{}) *listItem // добавить значение в начало
-	PushBack(v interface{}) *listItem  // добавить значение в конец
-	Remove(item *listItem)             // удалить элемент
-	MoveToFront(item *listItem)        // переместить элемент в начало
+	Len() int
+	Front() *listItem
+	Back() *listItem
+	PushFront(v interface{})
+	PushBack(v interface{})
+	Remove(i *listItem)
+	MoveToFront(i *listItem)
 }
 
 type listItem struct {
-	Value interface{} // значение
-	Next  *listItem   // следующий элемент
-	Prev  *listItem   // предыдущий элемент
+	Value interface{}
+	Prev  *listItem
+	Next  *listItem
 }
 
 type list struct {
-	length int
-	front  *listItem
-	tail   *listItem
-}
-
-func NewList() List {
-	return &list{}
+	len   int
+	items map[*listItem]interface{}
+	front *listItem
+	back  *listItem
 }
 
 func (l *list) Len() int {
-	return l.length
+	return l.len
 }
 
 func (l *list) Front() *listItem {
@@ -35,67 +32,74 @@ func (l *list) Front() *listItem {
 }
 
 func (l *list) Back() *listItem {
-	return l.tail
+	return l.back
 }
 
-func (l *list) PushFront(v interface{}) *listItem {
-	item := &listItem{
-		Value: v,
-		Next:  l.front,
-	}
-	return l.pushFront(item)
-}
-
-func (l *list) PushBack(v interface{}) *listItem {
-	item := &listItem{
-		Value: v,
-		Prev:  l.tail,
-	}
-	if l.Len() != 0 {
-		l.tail.Next = item
+func (l *list) PushFront(v interface{}) {
+	i := &listItem{Value: v}
+	if l.front == nil {
+		l.front = i
+		l.back = i
 	} else {
-		l.front = item
+		l.front.Prev = i
+		i.Next = l.front
+		l.front = i
 	}
-	l.tail = item
-	l.length++
-	return l.tail
+	l.items[i] = nil
+	l.len++
 }
 
-func (l *list) Remove(item *listItem) {
-	if item == nil {
+func (l *list) PushBack(v interface{}) {
+	i := &listItem{Value: v}
+	if l.back == nil {
+		l.front = i
+		l.back = i
+	} else {
+		l.back.Next = i
+		i.Prev = l.back
+		l.back = i
+	}
+	l.items[i] = nil
+	l.len++
+}
+
+func (l *list) Remove(i *listItem) {
+	if i == l.front {
+		l.front = i.Next
+	} else if i == l.back {
+		l.back = i.Prev
+	}
+
+	if i.Prev != nil {
+		i.Prev.Next = i.Next
+	}
+	if i.Next != nil {
+		i.Next.Prev = i.Prev
+	}
+	delete(l.items, i)
+	l.len--
+}
+
+func (l *list) MoveToFront(i *listItem) {
+	if l.front == i {
 		return
 	}
-	if item.Prev != nil {
-		item.Prev.Next = item.Next
+	if l.back == i {
+		l.back = i.Prev
 	}
-	if item.Next != nil {
-		item.Next.Prev = item.Prev
+	if i.Prev != nil {
+		i.Prev.Next = i.Next
 	}
-	if l.front == item {
-		l.front = item.Next
+	if i.Next != nil {
+		i.Next.Prev = i.Prev
 	}
-	if l.tail == item {
-		l.tail = item.Prev
-	}
-	l.length--
+	l.front.Prev = i
+	i.Next = l.front
+	i.Prev = nil
+	l.front = i
 }
 
-func (l *list) MoveToFront(item *listItem) {
-	if l.front != item {
-		l.Remove(item)
-		l.pushFront(item)
-	}
-}
-
-func (l *list) pushFront(item *listItem) *listItem {
-	item.Prev = nil
-	item.Next = l.front
-	if l.Len() != 0 {
-		l.front.Prev = item
-	} else {
-		l.tail = item
-	}
-	l.front = item
-	l.length++
-	return l.front
+func NewList() List {
+	items := map[*listItem]interface{}{}
+	return &list{items: items}
 }

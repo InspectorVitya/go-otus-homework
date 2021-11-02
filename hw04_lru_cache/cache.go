@@ -1,71 +1,79 @@
-package hw04lrucache
+package hw04_lru_cache
 
 import "sync"
 
 type Key string
 
 type Cache interface {
-	Set(key Key, value interface{}) bool // Добавить значение в кэш по ключу
-	Get(key Key) (interface{}, bool)     // Получить значение из кэша по ключу
-	Clear()                              // Очистить кэш
+	Set(key Key, value interface{}) bool
+	Get(key Key) (interface{}, bool)
+	Clear()
 }
 
 type lruCache struct {
-	mutex    sync.Mutex
-	items    map[Key]*listItem
-	queue    List
 	capacity int
+	items    map[Key]*cacheItem
+	queue    List
+	mux      sync.Mutex
+}
+
+func (l *lruCache) Set(key Key, value interface{}) bool {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+
+	_, keyExists := l.items[key]
+	if keyExists {
+		l.queue.Remove(l.items[key].qi)
+	} else if len(l.items) == l.capacity {
+		backQi := l.queue.Back()
+		delete(l.items, backQi.Value.(*cacheItem).key)
+		l.queue.Remove(backQi)
+	}
+
+	i := &cacheItem{
+		value: value,
+		key:   key,
+	}
+	l.queue.PushFront(i)
+	i.qi = l.queue.Front()
+	l.items[key] = i
+
+	return keyExists
+}
+
+func (l *lruCache) Get(key Key) (interface{}, bool) {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+
+	i, keyExists := l.items[key]
+	if !keyExists {
+		return nil, false
+	}
+	l.queue.MoveToFront(i.qi)
+	return i.value, true
+}
+
+func (l *lruCache) Clear() {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+
+	l.items = make(map[Key]*cacheItem, l.capacity)
+	l.queue = NewList()
 }
 
 type cacheItem struct {
-	key   Key
 	value interface{}
+	key   Key
+	qi    *listItem
 }
 
 func NewCache(capacity int) Cache {
+	items := make(map[Key]*cacheItem, capacity)
+	queue := NewList()
+
 	return &lruCache{
 		capacity: capacity,
-		queue:    NewList(),
-		items:    make(map[Key]*listItem),
-	}
-}
-
-func (lc *lruCache) Set(key Key, value interface{}) bool {
-	cacheValue := cacheItem{key: key, value: value}
-	lc.mutex.Lock()
-	defer lc.mutex.Unlock()
-	if item, ok := lc.items[key]; ok {
-		item.Value = cacheValue
-		lc.queue.MoveToFront(item)
-		return true
-	}
-	if lc.queue.Len() >= lc.capacity {
-		back := lc.queue.Back()
-		value := back.Value.(cacheItem)
-		delete(lc.items, value.key)
-		lc.queue.Remove(back)
-	}
-	item := lc.queue.PushFront(cacheValue)
-	lc.items[key] = item
-	return false
-}
-
-func (lc *lruCache) Get(key Key) (interface{}, bool) {
-	lc.mutex.Lock()
-	defer lc.mutex.Unlock()
-	if item, ok := lc.items[key]; ok {
-		lc.queue.MoveToFront(item)
-		cacheValue := item.Value.(cacheItem)
-		return cacheValue.value, true
-	}
-	return nil, false
-}
-
-func (lc *lruCache) Clear() {
-	lc.mutex.Lock()
-	defer lc.mutex.Unlock()
-	for key, item := range lc.items {
-		lc.queue.Remove(item)
-		delete(lc.items, key)
+		items:    items,
+		queue:    queue,
 	}
 }

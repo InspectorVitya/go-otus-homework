@@ -1,4 +1,4 @@
-package hw04lrucache
+package hw04_lru_cache
 
 import (
 	"testing"
@@ -49,21 +49,27 @@ func TestList(t *testing.T) {
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
 
-	t.Run("queue order", func(t *testing.T) {
+	t.Run("corner cases", func(t *testing.T) {
 		l := NewList()
+		l.PushBack(1)
+		l.Remove(l.Back())
+		require.Equal(t, 0, l.Len())
 
-		item1 := l.PushFront(10)
-		require.Equal(t, 1, l.Len())
-		require.Equal(t, l.Front(), l.Back())
+		l.PushFront(1)
+		l.Remove(l.Front())
+		require.Equal(t, 0, l.Len())
 
-		item2 := l.PushFront(20)
-		require.Equal(t, 2, l.Len())
-		require.Equal(t, item2, l.Front())
-		require.Equal(t, item1, l.Back())
+		l.PushFront(1)
+		l.MoveToFront(l.Front())
+		require.Equal(t, 1, l.Front().Value)
 
-		l.MoveToFront(item1)
-		require.Equal(t, 2, l.Len())
-		require.Equal(t, item1, l.Front())
-		require.Equal(t, item2, l.Back())
+		l.MoveToFront(l.Back())
+		require.Equal(t, 1, l.Front().Value)
+
+		l.PushFront(0)
+		i1 := l.Back()
+		l.MoveToFront(i1)
+		require.Equal(t, 1, l.Front().Value)
+		require.Equal(t, 0, l.Back().Value)
 	})
 }
